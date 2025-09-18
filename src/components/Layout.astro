@@ -1,0 +1,175 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { SITE_TITLE, SITE_URL, SITE_DESCRIPTION, AUTHOR_NAME } from '../site.config'
+import Header from './Header.astro'
+import Footer from './Footer.astro'
+import '../styles/base.css'
+
+export interface Props {
+  title?: string
+  description?: string
+  image?: string
+  canonical?: string
+  type?: 'website' | 'article'
+  publishedTime?: string
+  modifiedTime?: string
+  tags?: string[]
+  author?: string
+  post?: CollectionEntry<'posts'>
+}
+
+const {
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  image = `${SITE_URL}/og-default.png`,
+  canonical,
+  type = 'website',
+  publishedTime,
+  modifiedTime,
+  tags = [],
+  author = AUTHOR_NAME,
+  post,
+} = Astro.props
+
+const canonicalURL = canonical || new URL(Astro.url.pathname, SITE_URL)
+const socialImage = image.startsWith('http') ? image : new URL(image, SITE_URL)
+
+// JSON-LD for articles
+const jsonLd = type === 'article' && post ? {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  image: socialImage,
+  datePublished: publishedTime,
+  dateModified: modifiedTime || publishedTime,
+  author: {
+    '@type': 'Person',
+    name: author,
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: SITE_TITLE,
+    logo: {
+      '@type': 'ImageObject',
+      url: new URL('/logo.png', SITE_URL),
+    },
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': canonicalURL,
+  },
+  keywords: tags.join(', '),
+} : null
+---
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="color-scheme" content="light dark" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:locale" content="en_US" />
+    
+    {type === 'article' && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {type === 'article' && modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime} />
+    )}
+    {type === 'article' && author && (
+      <meta property="article:author" content={author} />
+    )}
+    {type === 'article' && tags.length > 0 && (
+      <meta property="article:tag" content={tags.join(', ')} />
+    )}
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" href="/rss.xml" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin />
+    
+    <!-- JSON-LD -->
+    {jsonLd && (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    )}
+    
+    <!-- Analytics (if enabled) -->
+    {import.meta.env.PUBLIC_GA_ID && (
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+        ga('create', import.meta.env.PUBLIC_GA_ID, 'auto');
+        ga('send', 'pageview');
+      </script>
+    )}
+  </head>
+  <body class="h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Skip to content link -->
+    <a href="#main-content" class="skip-link">
+      Skip to main content
+    </a>
+    
+    <!-- Header -->
+    <Header />
+    
+    <!-- Main content -->
+    <main id="main-content" class="min-h-screen">
+      <slot />
+    </main>
+    
+    <!-- Footer -->
+    <Footer />
+    
+    <!-- Theme toggle script -->
+    <script>
+      // Theme toggle functionality
+      function initTheme() {
+        const theme = localStorage.getItem('theme')
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        
+        if (theme === 'dark' || (!theme && prefersDark)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+      }
+      
+      // Initialize theme on page load
+      initTheme()
+      
+      // Listen for system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', initTheme)
+    </script>
+  </body>
+</html>
+

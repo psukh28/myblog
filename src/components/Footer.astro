@@ -1,0 +1,73 @@
+---
+import { SITE_TITLE, SITE_URL } from '../site.config'
+
+const currentYear = new Date().getFullYear()
+---
+
+<footer class="bg-earth-50 dark:bg-sage-900/50 border-t border-earth-200 dark:border-sage-700">
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Brand -->
+      <div class="md:col-span-2">
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-8 h-8 bg-moss-500 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">DG</span>
+          </div>
+          <span class="text-lg font-mono text-sage-900 dark:text-sage-100">{SITE_TITLE}</span>
+        </div>
+        <p class="text-sage-600 dark:text-sage-400 max-w-md leading-relaxed">
+A digital space where I share thoughts, ideas, guides, and reflections on technology, life, and the world around us
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="text-sm font-medium text-sage-900 dark:text-sage-100 uppercase tracking-wider mb-4">
+          Explore
+        </h3>
+        <ul class="space-y-2">
+          <li>
+            <a href="/" class="text-sage-600 dark:text-sage-400 hover:text-moss-600 dark:hover:text-moss-400 transition-colors text-sm">
+              home
+            </a>
+          </li>
+          <li>
+            <a href="/posts" class="text-sage-600 dark:text-sage-400 hover:text-moss-600 dark:hover:text-moss-400 transition-colors text-sm">
+              all posts
+            </a>
+          </li>
+          <li>
+            <a href="/tags" class="text-sage-600 dark:text-sage-400 hover:text-moss-600 dark:hover:text-moss-400 transition-colors text-sm">
+              tags
+            </a>
+          </li>
+          <li>
+            <a href="/about" class="text-sage-600 dark:text-sage-400 hover:text-moss-600 dark:hover:text-moss-400 transition-colors text-sm">
+              about
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom section -->
+    <div class="mt-8 pt-8 border-t border-earth-200 dark:border-sage-700">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <p class="text-sage-500 dark:text-sage-400 text-sm">
+          © {currentYear} {SITE_TITLE}. All rights reserved.
+        </p>
+        <div class="mt-4 md:mt-0 flex items-center space-x-6">
+          <a href="/rss.xml" class="text-sage-500 dark:text-sage-400 hover:text-moss-600 dark:hover:text-moss-400 transition-colors text-sm">
+            rss
+          </a>
+          <a href="/sitemap.xml" class="text-sage-500 dark:text-sage-400 hover:text-moss-600 dark:hover:text-moss-400 transition-colors text-sm">
+            sitemap
+          </a>
+          <p class="text-sage-500 dark:text-sage-400 text-sm">
+            built with <span class="text-moss-500">♥</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,84 @@
+---
+title: "Building a Full-Stack Inventory Management System"
+description: "The story of one developer, thousands of garments, and a mountain of spreadsheets. How a simple Python script evolved into a complete production system."
+pubDate: 2025-09-15
+updatedDate: 2025-09-16
+tags: ["full-stack", "python", "fastapi", "nextjs", "postgresql", "docker", "business", "automation"]
+coverImage: "/images/covers/inventory-system.jpg"
+coverAlt: "A digital dashboard showing inventory management interface"
+draft: false
+canonical: "https://example.com/posts/inventory-management-system"
+---
+
+## When Spreadsheets Stop Helping
+
+Running a garment business meant living inside Excel. Inventory sheets were spread across network drives, Google Drive, and even someone's laptop. Every morning began with detective work: which file was current, why a critical number sat inside a hidden row, and who had changed a formula overnight. Matching product images was slow and error-prone. Production tracking felt more like guesswork than data.
+
+After months of this I decided to build a system that would put the data where it belonged—inside a proper database—while letting the team keep the familiar Excel workflow.
+
+---
+
+## The Slow Expansion of a "Small Script"
+
+It started simply. I wrote a short Python script to clean incoming Excel files. Within weeks it had grown into a two-thousand-line program that still needed manual nudges.
+
+The next step was to add structure: YAML configs, environment variables, robust logging, real error handling, fuzzy image matching, and a test suite. What began as a helper script was now a true ETL pipeline.
+
+Then came the bigger idea. Instead of just cleaning data, why not present it cleanly? I built a FastAPI backend, added a PostgreSQL database, created a Next.js frontend with TypeScript and Tailwind, and packaged everything in Docker with Nginx out front. The system had quietly turned full stack.
+
+---
+
+## What the System Does
+
+At the center is an automated pipeline that:
+
+* pulls Excel files from SMB servers, Google Drive, and SharePoint
+* cleans and reshapes them, including hidden rows and merged cells
+* matches product images with fuzzy string logic
+* validates everything before it reaches the database
+
+The FastAPI backend serves REST endpoints with JWT authentication. PostgreSQL stores all product and production data; Redis caches frequent queries. Background jobs create optimized thumbnails and WebP images so the web interface loads fast.
+
+On the front end, a Next.js dashboard gives a live view of inventory, production status, and trends. Users who prefer Excel can still export any dataset with a click.
+
+Everything runs inside Docker containers. Nginx manages SSL and routing. Backups and updates are straightforward and repeatable.
+
+---
+
+## What I Learned Along the Way
+
+**Database design matters.** Changing a live schema is painful—thinking about relationships early saves hours later.
+
+**Testing isn't optional.** A few unit tests prevent long nights of manual debugging.
+
+**State management grows quickly.** I moved from React state to Context to TanStack Query and stopped when things were reliable and understandable.
+
+**Docker has a learning curve but pays off.** Once the basics clicked, deployments became routine.
+
+**Write things down.** Good documentation helped me return to the project weeks later without re-learning decisions.
+
+---
+
+## Results for the Business
+
+The finished system means:
+
+* Clean, consistent data without late-night spreadsheet marathons
+* Real-time stock levels and production tracking
+* Easier decisions based on live numbers, not outdated files
+
+Team members can still work in Excel if that's what they know. The pipeline takes care of the rest, ensuring that every change is captured and shared with the rest of the system.
+
+---
+
+## What's Next
+
+I plan to add a lightweight mobile app for on-floor checks, richer analytics for forecasting, and eventually IoT connections for real-time factory data. The foundation is solid enough to grow without a major rewrite.
+
+---
+
+## Closing Thoughts
+
+A project that began as a weekend script became a full production system. It taught me more about databases, APIs, frontend patterns, containerization, and testing than any course ever could—and, more importantly, it fixed a real operational headache.
+
+If you're facing a process that slows everyone down, start with the smallest piece you can automate. Build until the pain is gone. That's the real measure of a successful system.

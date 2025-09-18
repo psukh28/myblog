@@ -1,0 +1,18 @@
+---
+import type { CollectionEntry } from 'astro:content'
+
+export interface Props {
+  content: CollectionEntry<'posts'>['body']
+  className?: string
+}
+
+const { content, className = '' } = Astro.props
+---
+
+<article class={`prose prose-lg max-w-none ${className}`}>
+  <slot />
+</article>
+
+<style>
+  @import '../styles/prose.css';
+</style>

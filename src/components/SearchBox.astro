@@ -1,0 +1,391 @@
+---
+// This component provides a search input that will be enhanced by client-side JavaScript
+---
+
+<div class="search-box relative">
+  <div class="relative">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    </div>
+    <input
+      id="search-input"
+      type="text"
+      placeholder="Search posts..."
+      class="input pl-10 pr-4 py-2 w-full sm:w-64"
+      autocomplete="off"
+    />
+    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+      <kbd class="hidden sm:inline-flex items-center px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors" 
+           title="Click to focus search (or press ⌘K)">
+        ⌘K
+      </kbd>
+    </div>
+  </div>
+  
+  <!-- Search results dropdown -->
+  <div id="search-results" class="search-results hidden">
+    <div id="search-loading" class="p-4 text-center text-gray-500 dark:text-gray-400 hidden">
+      <svg class="animate-spin h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="mt-2 text-sm">Searching...</p>
+    </div>
+    <div id="search-results-list" class="hidden">
+      <!-- Results will be populated by JavaScript -->
+    </div>
+    <div id="search-no-results" class="p-4 text-center text-gray-500 dark:text-gray-400 hidden">
+      <p class="text-sm">No posts found matching your search.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Load elasticlunr from CDN
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/elasticlunr@0.9.5/elasticlunr.js'
+  script.onload = () => {
+    console.log('Elasticlunr loaded')
+    new SearchBox()
+  }
+  script.onerror = () => {
+    console.error('Failed to load elasticlunr, using fallback search only')
+    new SearchBox()
+  }
+  document.head.appendChild(script)
+
+  class SearchBox {
+    constructor() {
+      this.input = document.getElementById('search-input')
+      this.results = document.getElementById('search-results')
+      this.loading = document.getElementById('search-loading')
+      this.resultsList = document.getElementById('search-results-list')
+      this.noResults = document.getElementById('search-no-results')
+      this.searchIndex = null
+      this.searchEngine = null
+      this.debounceTimer = null
+      this.isOpen = false
+      
+      this.init()
+    }
+    
+    async init() {
+      if (!this.input) {
+        console.error('Search input not found!')
+        return
+      }
+      
+      console.log('SearchBox initialized, input found:', this.input)
+      
+      // Load search index
+      await this.loadSearchIndex()
+      
+      // Bind events
+      this.input.addEventListener('input', this.handleInput.bind(this))
+      this.input.addEventListener('focus', this.handleFocus.bind(this))
+      this.input.addEventListener('blur', this.handleBlur.bind(this))
+      this.input.addEventListener('keydown', this.handleKeydown.bind(this))
+      
+      // Keyboard shortcut
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault()
+          console.log('⌘K pressed, focusing search input')
+          this.input.focus()
+          this.input.select() // Also select the text for better UX
+        }
+      })
+      
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!this.input.contains(e.target) && !this.results.contains(e.target)) {
+          this.closeResults()
+        }
+      })
+      
+      // Make ⌘K button clickable
+      const kbdButton = this.input.parentElement.querySelector('kbd')
+      if (kbdButton) {
+        kbdButton.addEventListener('click', (e) => {
+          e.preventDefault()
+          console.log('⌘K button clicked, focusing search input')
+          this.input.focus()
+          this.input.select()
+        })
+      } else {
+        console.warn('⌘K button not found')
+      }
+    }
+    
+    async loadSearchIndex() {
+      try {
+        console.log('Loading search index...')
+        const response = await fetch('/api/search.json')
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        console.log('Search index loaded:', data)
+        
+        this.searchIndex = data.index
+        this.searchEngine = window.elasticlunr.Index.load(data.index)
+        
+        console.log('Search engine initialized with', data.count, 'posts')
+      } catch (error) {
+        console.error('Failed to load search index:', error)
+        this.showError('Failed to load search index: ' + error.message)
+      }
+    }
+    
+    handleInput(e) {
+      const query = e.target.value.trim()
+      
+      // Clear previous debounce
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer)
+      }
+      
+      if (query.length < 2) {
+        this.closeResults()
+        return
+      }
+      
+      // Debounce search
+      this.debounceTimer = setTimeout(() => {
+        this.search(query)
+      }, 300)
+    }
+    
+    handleFocus() {
+      if (this.input.value.trim().length >= 2) {
+        this.showResults()
+      }
+    }
+    
+    handleBlur() {
+      // Delay closing to allow clicking on results
+      setTimeout(() => {
+        this.closeResults()
+      }, 200)
+    }
+    
+    handleKeydown(e) {
+      if (e.key === 'Escape') {
+        this.closeResults()
+        this.input.blur()
+      }
+    }
+    
+    search(query) {
+      this.showLoading()
+      
+      // Always try fallback search first since elasticlunr is having issues
+      console.log('Using fallback search for query:', query)
+      const fallbackResults = this.fallbackSearch(query)
+      this.displayResults(fallbackResults)
+      
+      // If elasticlunr is available, try it as well
+      if (this.searchEngine) {
+        try {
+          const results = this.searchEngine.search(query, {
+            fields: {
+              title: { boost: 3 },
+              description: { boost: 2 },
+              tags: { boost: 2.5 },
+              content: { boost: 1 }
+            },
+            expand: true,
+            bool: "OR"
+          })
+          
+          console.log('Elasticlunr search results:', results)
+          
+          if (results.length > 0) {
+            this.displayResults(results.slice(0, 5))
+          }
+        } catch (error) {
+          console.error('Elasticlunr search error:', error)
+          // Keep using fallback results
+        }
+      }
+    }
+    
+    fallbackSearch(query) {
+      if (!this.searchIndex || !this.searchIndex.documentStore) {
+        console.warn('No search index available for fallback search')
+        return []
+      }
+      
+      const docs = this.searchIndex.documentStore.docs
+      const results = []
+      const queryLower = query.toLowerCase()
+      
+      for (const [slug, doc] of Object.entries(docs)) {
+        if (!doc) continue
+        
+        const titleMatch = doc.title && doc.title.toLowerCase().includes(queryLower)
+        const descMatch = doc.description && doc.description.toLowerCase().includes(queryLower)
+        const tagsMatch = doc.tags && doc.tags.toLowerCase().includes(queryLower)
+        const contentMatch = doc.content && doc.content.toLowerCase().includes(queryLower)
+        
+        if (titleMatch || descMatch || tagsMatch || contentMatch) {
+          // Calculate a simple score based on match type
+          let score = 0
+          if (titleMatch) score += 3
+          if (descMatch) score += 2
+          if (tagsMatch) score += 2.5
+          if (contentMatch) score += 1
+          
+          results.push({ 
+            doc,
+            score,
+            ref: slug
+          })
+        }
+      }
+      
+      // Sort by score (highest first)
+      results.sort((a, b) => b.score - a.score)
+      
+      console.log('Fallback search results:', results)
+      return results.slice(0, 5)
+    }
+    
+    showLoading() {
+      this.results.classList.remove('hidden')
+      this.loading.classList.remove('hidden')
+      this.resultsList.classList.add('hidden')
+      this.noResults.classList.add('hidden')
+      this.isOpen = true
+    }
+    
+    displayResults(results) {
+      this.loading.classList.add('hidden')
+      
+      console.log('Displaying results:', results)
+      
+      if (results.length === 0) {
+        this.noResults.classList.remove('hidden')
+        this.resultsList.classList.add('hidden')
+      } else {
+        this.resultsList.innerHTML = results.map(result => {
+          // Handle elasticlunr results which have {ref, score} format
+          let doc
+          if (result.ref) {
+            // This is an elasticlunr result, get the doc from the index
+            doc = this.searchIndex.documentStore.docs[result.ref]
+          } else {
+            // This is a fallback result with {doc} format
+            doc = result.doc || result
+          }
+          
+          if (!doc) {
+            console.error('No document found for result:', result)
+            return ''
+          }
+          
+          const tags = doc.tags ? doc.tags.split(' ') : []
+          
+          return `
+            <a href="/posts/${doc.slug}" class="search-result block">
+              <h4 class="font-medium text-gray-900 dark:text-white">${doc.title}</h4>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${doc.description}</p>
+              ${tags.length > 0 ? `<div class="flex flex-wrap gap-1 mt-2">${tags.map(tag => `<span class="tag text-xs">${tag}</span>`).join('')}</div>` : ''}
+            </a>
+          `
+        }).join('')
+        
+        this.resultsList.classList.remove('hidden')
+        this.noResults.classList.add('hidden')
+      }
+      
+      this.isOpen = true
+    }
+    
+    showError(message) {
+      this.loading.classList.add('hidden')
+      this.resultsList.classList.add('hidden')
+      this.noResults.innerHTML = `<p class="text-sm text-red-500">${message}</p>`
+      this.noResults.classList.remove('hidden')
+      this.isOpen = true
+    }
+    
+    showResults() {
+      this.results.classList.remove('hidden')
+      this.isOpen = true
+    }
+    
+    closeResults() {
+      this.results.classList.add('hidden')
+      this.isOpen = false
+    }
+  }
+</script>
+
+<style>
+  .search-box {
+    position: relative;
+  }
+  
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    max-height: 24rem;
+    overflow-y: auto;
+    z-index: 50;
+  }
+  
+  .dark .search-results {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .search-result {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.15s ease-in-out;
+  }
+  
+  .search-result:hover {
+    background-color: #f9fafb;
+  }
+  
+  .dark .search-result {
+    border-bottom-color: #374151;
+  }
+  
+  .dark .search-result:hover {
+    background-color: #374151;
+  }
+  
+  .search-result:last-child {
+    border-bottom: none;
+  }
+  
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+  
+  .dark .tag {
+    background-color: #4b5563;
+    color: #d1d5db;
+  }
+</style>

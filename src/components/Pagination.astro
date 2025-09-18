@@ -1,0 +1,98 @@
+---
+import type { PaginationProps } from '../utils/pagination'
+import { getPaginationPages, getPageUrl } from '../utils/pagination'
+
+export interface Props extends PaginationProps {
+  showFirstLast?: boolean
+  showPrevNext?: boolean
+}
+
+const {
+  currentPage,
+  totalPages,
+  baseUrl,
+  showFirstLast = true,
+  showPrevNext = true,
+} = Astro.props
+
+const pages = getPaginationPages(currentPage, totalPages)
+const hasPages = totalPages > 1
+---
+
+{hasPages && (
+  <nav class="pagination" aria-label="Pagination">
+    {showPrevNext && (
+      <a
+        href={currentPage > 1 ? getPageUrl(baseUrl, currentPage - 1) : undefined}
+        class={`pagination ${currentPage <= 1 ? 'disabled' : ''}`}
+        aria-label="Previous page"
+        aria-disabled={currentPage <= 1}
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span class="sr-only">Previous</span>
+      </a>
+    )}
+    
+    {showFirstLast && currentPage > 3 && (
+      <>
+        <a href={getPageUrl(baseUrl, 1)} class="pagination">
+          1
+        </a>
+        {currentPage > 4 && (
+          <span class="pagination disabled">...</span>
+        )}
+      </>
+    )}
+    
+    {pages.map((page) => (
+      page === -1 ? (
+        <span key="ellipsis" class="pagination disabled">...</span>
+      ) : (
+        <a
+          key={page}
+          href={getPageUrl(baseUrl, page)}
+          class={`pagination ${page === currentPage ? 'current' : ''}`}
+          aria-current={page === currentPage ? 'page' : undefined}
+          aria-label={`Page ${page}`}
+        >
+          {page}
+        </a>
+      )
+    ))}
+    
+    {showFirstLast && currentPage < totalPages - 2 && (
+      <>
+        {currentPage < totalPages - 3 && (
+          <span class="pagination disabled">...</span>
+        )}
+        <a href={getPageUrl(baseUrl, totalPages)} class="pagination">
+          {totalPages}
+        </a>
+      </>
+    )}
+    
+    {showPrevNext && (
+      <a
+        href={currentPage < totalPages ? getPageUrl(baseUrl, currentPage + 1) : undefined}
+        class={`pagination ${currentPage >= totalPages ? 'disabled' : ''}`}
+        aria-label="Next page"
+        aria-disabled={currentPage >= totalPages}
+      >
+        <span class="sr-only">Next</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    )}
+  </nav>
+)}
+
+<style>
+  .pagination a[aria-disabled="true"],
+  .pagination .disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+</style>

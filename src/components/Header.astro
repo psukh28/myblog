@@ -1,0 +1,201 @@
+---
+import { SITE_TITLE, SITE_URL } from '../site.config'
+import SearchBox from './SearchBox.astro'
+
+const currentPath = Astro.url.pathname
+---
+
+<header class="sticky top-0 z-40 w-full border-b border-earth-200 dark:border-sage-700 bg-white/80 dark:bg-sage-900/80 backdrop-blur-sm">
+  <div class="max-w-4xl mx-auto px-6 py-4">
+    <div class="flex items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center">
+        <a href="/" class="flex items-center space-x-3 text-lg font-mono text-sage-800 dark:text-sage-200 hover:text-moss-600 dark:hover:text-moss-400 transition-colors">
+          <div class="w-8 h-8 bg-moss-500 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">DG</span>
+          </div>
+          <span class="font-medium">{SITE_TITLE}</span>
+        </a>
+      </div>
+      
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center space-x-8">
+        <a 
+          href="/" 
+          class={`text-sm font-medium transition-colors ${
+            currentPath === '/' 
+              ? 'text-moss-600 dark:text-moss-400' 
+              : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100'
+          }`}
+        >
+          home
+        </a>
+        <a 
+          href="/posts" 
+          class={`text-sm font-medium transition-colors ${
+            currentPath.startsWith('/posts') 
+              ? 'text-moss-600 dark:text-moss-400' 
+              : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100'
+          }`}
+        >
+          posts
+        </a>
+        <a 
+          href="/tags" 
+          class={`text-sm font-medium transition-colors ${
+            currentPath.startsWith('/tags') 
+              ? 'text-moss-600 dark:text-moss-400' 
+              : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100'
+          }`}
+        >
+          tags
+        </a>
+        <a 
+          href="/about" 
+          class={`text-sm font-medium transition-colors ${
+            currentPath === '/about' 
+              ? 'text-moss-600 dark:text-moss-400' 
+              : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100'
+          }`}
+        >
+          about
+        </a>
+      </nav>
+      
+      <!-- Right side actions -->
+      <div class="flex items-center space-x-4">
+        <!-- Search Box -->
+        <div class="hidden sm:block">
+          <SearchBox />
+        </div>
+        
+        <!-- Theme Toggle -->
+        <button
+          id="theme-toggle"
+          class="p-2 rounded-lg text-sage-500 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100 hover:bg-earth-100 dark:hover:bg-sage-800 transition-colors"
+          aria-label="Toggle theme"
+        >
+          <svg id="sun-icon" class="w-4 h-4 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+          </svg>
+          <svg id="moon-icon" class="w-4 h-4 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+          </svg>
+        </button>
+        
+        <!-- Mobile menu button -->
+        <button
+          id="mobile-menu-button"
+          class="md:hidden p-2 rounded-lg text-sage-500 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100 hover:bg-earth-100 dark:hover:bg-sage-800 transition-colors"
+          aria-label="Toggle mobile menu"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Mobile Navigation -->
+    <div id="mobile-menu" class="md:hidden hidden border-t border-earth-200 dark:border-sage-700 py-4 mt-4">
+      <div class="space-y-4">
+        <!-- Mobile Search -->
+        <div class="sm:hidden">
+          <SearchBox />
+        </div>
+        
+        <!-- Mobile Navigation Links -->
+        <nav class="space-y-2">
+          <a 
+            href="/" 
+            class={`block px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              currentPath === '/' 
+                ? 'text-moss-600 dark:text-moss-400 bg-moss-50 dark:bg-moss-900/20' 
+                : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100 hover:bg-earth-100 dark:hover:bg-sage-800'
+            }`}
+          >
+            home
+          </a>
+          <a 
+            href="/posts" 
+            class={`block px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              currentPath.startsWith('/posts') 
+                ? 'text-moss-600 dark:text-moss-400 bg-moss-50 dark:bg-moss-900/20' 
+                : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100 hover:bg-earth-100 dark:hover:bg-sage-800'
+            }`}
+          >
+            posts
+          </a>
+          <a 
+            href="/tags" 
+            class={`block px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              currentPath.startsWith('/tags') 
+                ? 'text-moss-600 dark:text-moss-400 bg-moss-50 dark:bg-moss-900/20' 
+                : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100 hover:bg-earth-100 dark:hover:bg-sage-800'
+            }`}
+          >
+            tags
+          </a>
+          <a 
+            href="/about" 
+            class={`block px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              currentPath === '/about' 
+                ? 'text-moss-600 dark:text-moss-400 bg-moss-50 dark:bg-moss-900/20' 
+                : 'text-sage-600 dark:text-sage-400 hover:text-sage-900 dark:hover:text-sage-100 hover:bg-earth-100 dark:hover:bg-sage-800'
+            }`}
+          >
+            about
+          </a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Theme toggle functionality
+  function initThemeToggle() {
+    const themeToggle = document.getElementById('theme-toggle')
+    const sunIcon = document.getElementById('sun-icon')
+    const moonIcon = document.getElementById('moon-icon')
+    
+    if (!themeToggle) return
+    
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.contains('dark')
+      
+      if (isDark) {
+        document.documentElement.classList.remove('dark')
+        localStorage.setItem('theme', 'light')
+      } else {
+        document.documentElement.classList.add('dark')
+        localStorage.setItem('theme', 'dark')
+      }
+    })
+  }
+  
+  // Mobile menu toggle
+  function initMobileMenu() {
+    const mobileMenuButton = document.getElementById('mobile-menu-button')
+    const mobileMenu = document.getElementById('mobile-menu')
+    
+    if (!mobileMenuButton || !mobileMenu) return
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden')
+    })
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!mobileMenuButton.contains(event.target as Node) && !mobileMenu.contains(event.target as Node)) {
+        mobileMenu.classList.add('hidden')
+      }
+    })
+  }
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    initThemeToggle()
+    initMobileMenu()
+  })
+</script>

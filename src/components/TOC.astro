@@ -1,0 +1,118 @@
+---
+export interface Props {
+  headings: Array<{
+    depth: number
+    slug: string
+    text: string
+  }>
+  className?: string
+}
+
+const { headings, className = '' } = Astro.props
+
+// Filter out h1 headings and create a hierarchical structure
+const filteredHeadings = headings.filter(heading => heading.depth > 1)
+const maxDepth = Math.max(...filteredHeadings.map(h => h.depth))
+---
+
+{filteredHeadings.length > 0 && (
+  <nav class={`toc ${className}`} aria-label="Table of contents">
+    <h3 class="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wider">
+      Table of Contents
+    </h3>
+    <ul class="space-y-1">
+      {filteredHeadings.map((heading, index) => (
+        <li key={heading.slug} class={`ml-${(heading.depth - 2) * 4}`}>
+          <a
+            href={`#${heading.slug}`}
+            class="block py-1 px-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+            data-depth={heading.depth}
+          >
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<script>
+  // Highlight current section in TOC
+  function initTOC() {
+    const tocLinks = document.querySelectorAll('.toc a[href^="#"]')
+    const headings = document.querySelectorAll('h2, h3, h4, h5, h6')
+    
+    if (tocLinks.length === 0 || headings.length === 0) return
+    
+    function updateActiveLink() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const offset = 100 // Offset for sticky header
+      
+      let currentHeading = null
+      
+      // Find the current heading based on scroll position
+      for (let i = headings.length - 1; i >= 0; i--) {
+        const heading = headings[i] as HTMLElement
+        if (heading.offsetTop - offset <= scrollTop) {
+          currentHeading = heading
+          break
+        }
+      }
+      
+      // Update active states
+      tocLinks.forEach(link => {
+        const href = link.getAttribute('href')
+        if (href) {
+          const targetId = href.substring(1)
+          const isActive = currentHeading && currentHeading.id === targetId
+          
+          link.classList.toggle('active', isActive)
+        }
+      })
+    }
+    
+    // Update on scroll
+    let ticking = false
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateActiveLink()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    
+    window.addEventListener('scroll', onScroll)
+    updateActiveLink() // Initial call
+  }
+  
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initTOC)
+</script>
+
+<style>
+  .toc a.active {
+    @apply text-moss-600 dark:text-moss-400 bg-moss-50 dark:bg-moss-900/20;
+  }
+  
+  .toc li {
+    margin-left: 0 !important;
+  }
+  
+  .toc a[data-depth="3"] {
+    @apply ml-4;
+  }
+  
+  .toc a[data-depth="4"] {
+    @apply ml-8;
+  }
+  
+  .toc a[data-depth="5"] {
+    @apply ml-12;
+  }
+  
+  .toc a[data-depth="6"] {
+    @apply ml-16;
+  }
+</style>

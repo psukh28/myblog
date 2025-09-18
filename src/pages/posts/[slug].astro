@@ -1,0 +1,256 @@
+---
+import { getCollection } from 'astro:content'
+import { render } from 'astro:content'
+import Layout from '../../components/Layout.astro'
+import TOC from '../../components/TOC.astro'
+import Tag from '../../components/Tag.astro'
+import Pagination from '../../components/Pagination.astro'
+import { getSlugFromFilename } from '../../utils/slug'
+import { formatDate, formatDateISO, getReadingTime } from '../../utils/date'
+import { SITE_URL } from '../../site.config'
+import '../../styles/prose.css'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft)
+  
+  return posts.map((post) => ({
+    params: { slug: getSlugFromFilename(post.id) },
+    props: { post }
+  }))
+}
+
+const { post } = Astro.props
+const { data, body } = post
+const slug = getSlugFromFilename(post.id)
+
+// Render the MDX content to HTML
+const { Content } = await render(post)
+
+// Get all posts for navigation
+const allPosts = await getCollection('posts', ({ data }) => !data.draft)
+const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+const currentIndex = sortedPosts.findIndex(p => p.id === post.id)
+
+const prevPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null
+const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null
+
+// Extract headings for TOC
+const headingRegex = /^#{2,6}\s+(.+)$/gm
+const headings = []
+let match
+while ((match = headingRegex.exec(body)) !== null) {
+  const depth = match[0].match(/^#+/)[0].length
+  const text = match[1].trim()
+  const slug = text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  
+  headings.push({ depth, slug, text })
+}
+
+// Calculate reading time if not provided
+const readingTime = data.readingTime || getReadingTime(body)
+
+// Generate canonical URL
+const canonical = data.canonical || `${SITE_URL}/posts/${slug}/`
+
+// Generate social image URL
+const socialImage = data.coverImage 
+  ? (data.coverImage.startsWith('http') ? data.coverImage : `${SITE_URL}${data.coverImage}`)
+  : `${SITE_URL}/api/og.png?title=${encodeURIComponent(data.title)}&tag=${data.tags?.[0] || 'blog'}`
+---
+
+<Layout
+  title={data.title}
+  description={data.description}
+  image={socialImage}
+  canonical={canonical}
+  type="article"
+  publishedTime={formatDateISO(data.pubDate)}
+  modifiedTime={data.updatedDate ? formatDateISO(data.updatedDate) : undefined}
+  tags={data.tags}
+  post={post}
+>
+  <article class="bg-white dark:bg-gray-900 min-h-screen">
+    <!-- Article Header -->
+    <header class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-4xl mx-auto">
+          <!-- Breadcrumb -->
+          <nav class="mb-6" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <li><a href="/" class="hover:text-moss-600 dark:hover:text-moss-400">Home</a></li>
+              <li class="flex items-center">
+                <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <a href="/posts" class="hover:text-moss-600 dark:hover:text-moss-400">Posts</a>
+              </li>
+              <li class="flex items-center">
+                <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-gray-900 dark:text-white">{data.title}</span>
+              </li>
+            </ol>
+          </nav>
+
+          <!-- Title -->
+          <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            {data.title}
+          </h1>
+
+          <!-- Meta Information -->
+          <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <time datetime={formatDateISO(data.pubDate)}>
+              {formatDate(data.pubDate)}
+            </time>
+            <span>•</span>
+            <span>{readingTime} min read</span>
+            {data.updatedDate && data.updatedDate.getTime() !== data.pubDate.getTime() && (
+              <>
+                <span>•</span>
+                <span>Updated {formatDate(data.updatedDate)}</span>
+              </>
+            )}
+          </div>
+
+          <!-- Description -->
+          <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
+            {data.description}
+          </p>
+
+          <!-- Tags -->
+          {data.tags && data.tags.length > 0 && (
+            <div class="flex flex-wrap gap-2">
+              {data.tags.map((tag) => (
+                <Tag name={tag} href={`/tags/${getSlugFromFilename(tag)}`} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <!-- Cover Image -->
+    {data.coverImage && (
+      <div class="bg-gray-100 dark:bg-gray-800">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div class="max-w-4xl mx-auto">
+            <img
+              src={data.coverImage}
+              alt={data.coverAlt || data.title}
+              class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg shadow-lg"
+              loading="eager"
+            />
+            {data.coverAlt && (
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
+                {data.coverAlt}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+    <!-- Article Content -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+          <!-- Main Content -->
+          <div class="lg:col-span-3">
+            <div class="prose prose-lg max-w-none">
+              <Content />
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="lg:col-span-1">
+            <div class="sticky top-24 space-y-8">
+              <!-- Table of Contents -->
+              <TOC headings={headings} />
+
+              <!-- Share Buttons -->
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-4">
+                  Share this post
+                </h3>
+                <div class="flex space-x-3">
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(data.title)}&url=${encodeURIComponent(canonical)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    aria-label="Share on Twitter"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
+                    </svg>
+                  </a>
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonical)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="p-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
+                    aria-label="Share on LinkedIn"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    {(prevPost || nextPost) && (
+      <div class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div class="max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <!-- Previous Post -->
+              {prevPost && (
+                <div class="group">
+                  <a href={`/posts/${getSlugFromFilename(prevPost.id)}/`} class="block">
+                    <div class="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span>Previous Post</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white group-hover:text-moss-600 dark:group-hover:text-moss-400 transition-colors">
+                      {prevPost.data.title}
+                    </h3>
+                  </a>
+                </div>
+              )}
+
+              <!-- Next Post -->
+              {nextPost && (
+                <div class="group text-right">
+                  <a href={`/posts/${getSlugFromFilename(nextPost.id)}/`} class="block">
+                    <div class="flex items-center justify-end space-x-3 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      <span>Next Post</span>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white group-hover:text-moss-600 dark:group-hover:text-moss-400 transition-colors">
+                      {nextPost.data.title}
+                    </h3>
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </article>
+</Layout>

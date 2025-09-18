@@ -1,0 +1,32 @@
+---
+import Layout from '../components/Layout.astro'
+import { AUTHOR_NAME } from '../site.config'
+---
+
+<Layout
+  title="About"
+  description="About the author of this blog"
+>
+  <div class="min-h-screen py-16">
+    <div class="max-w-2xl mx-auto px-6">
+      <h1 class="text-3xl font-light text-gray-900 dark:text-white mb-8">
+        About
+      </h1>
+      
+      <div class="prose prose-lg max-w-none">
+        <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
+          Hi, I'm {AUTHOR_NAME}. I work with data, build tools to make work smoother, and write about whatever catches my attention.
+        </p>
+        
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          This blog is where I put down projects, analyses, and ideas, sometimes technical, sometimes about business, and sometimes just everyday thoughts.
+        </p>
+        
+        <p class="text-gray-600 dark:text-gray-400">
+          You can find me on <a href="https://github.com/psukh28" target="_blank" rel="noopener noreferrer" class="text-moss-600 dark:text-moss-400 hover:underline">GitHub</a> or 
+          <a href="https://www.linkedin.com/in/pranavsuku/" target="_blank" rel="noopener noreferrer" class="text-moss-600 dark:text-moss-400 hover:underline">LinkedIn</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</Layout>

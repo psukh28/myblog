@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Additional prose styles for MDX content */
+.prose {
+  @apply prose-gray dark:prose-invert max-w-none;
+}
+
+/* Custom callout styles */
+.prose .callout {
+  @apply p-4 rounded-lg border-l-4 my-6;
+}
+
+.prose .callout-info {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-800 dark:text-blue-200;
+}
+
+.prose .callout-tip {
+  @apply bg-green-50 dark:bg-green-900/20 border-green-500 text-green-800 dark:text-green-200;
+}
+
+.prose .callout-warn {
+  @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 text-yellow-800 dark:text-yellow-200;
+}
+
+.prose .callout-danger {
+  @apply bg-red-50 dark:bg-red-900/20 border-red-500 text-red-800 dark:text-red-200;
+}
+
+/* Table styles */
+.prose table {
+  @apply w-full border-collapse;
+}
+
+.prose th,
+.prose td {
+  @apply border border-gray-200 dark:border-gray-700 px-4 py-2 text-left;
+}
+
+.prose th {
+  @apply bg-gray-50 dark:bg-gray-800 font-semibold;
+}
+
+/* Code block styles */
+.prose pre {
+  @apply bg-gray-900 dark:bg-gray-950 text-gray-100;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-sm;
+}
+
+/* Image styles */
+.prose img {
+  @apply rounded-lg shadow-sm;
+}
+
+.prose figure {
+  @apply my-6;
+}
+
+.prose figcaption {
+  @apply text-center text-sm text-gray-600 dark:text-gray-400 mt-2;
+}
+
+/* Link styles */
+.prose a {
+  @apply text-moss-600 dark:text-moss-400 hover:text-moss-700 dark:hover:text-moss-300 no-underline hover:underline;
+}
+
+/* Heading styles with anchor links */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply scroll-mt-20 relative;
+}
+
+.prose h1 .anchor,
+.prose h2 .anchor,
+.prose h3 .anchor,
+.prose h4 .anchor,
+.prose h5 .anchor,
+.prose h6 .anchor {
+  @apply absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300;
+}
+
+.prose h1:hover .anchor,
+.prose h2:hover .anchor,
+.prose h3:hover .anchor,
+.prose h4:hover .anchor,
+.prose h5:hover .anchor,
+.prose h6:hover .anchor {
+  @apply opacity-100;
+}
+
+/* Blockquote styles */
+.prose blockquote {
+  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic;
+}
+
+/* List styles */
+.prose ul,
+.prose ol {
+  @apply space-y-1;
+}
+
+.prose li {
+  @apply leading-relaxed;
+}
+
+/* Horizontal rule */
+.prose hr {
+  @apply border-gray-200 dark:border-gray-700 my-8;
+}
+
+/* Inline code */
+.prose code {
+  @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+/* Keyboard keys */
+.prose kbd {
+  @apply bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-xs font-mono;
+}
+
+/* Mark/highlight */
+.prose mark {
+  @apply bg-yellow-200 dark:bg-yellow-800 px-1 rounded;
+}
+
+/* Details/Summary */
+.prose details {
+  @apply my-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+.prose summary {
+  @apply font-semibold cursor-pointer;
+}
+
+.prose details[open] summary {
+  @apply mb-2;
+}

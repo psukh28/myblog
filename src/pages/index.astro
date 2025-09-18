@@ -1,0 +1,128 @@
+---
+import { getCollection } from 'astro:content'
+import Layout from '../components/Layout.astro'
+import PostCard from '../components/PostCard.astro'
+import Pagination from '../components/Pagination.astro'
+import { getSlugFromFilename, getUniqueTags } from '../utils/slug'
+import { getPaginationProps } from '../utils/pagination'
+import { POSTS_PER_PAGE } from '../site.config'
+
+// Get all published posts
+const allPosts = await getCollection('posts', ({ data }) => !data.draft)
+const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+
+// Pagination
+const currentPage = 1
+const totalPosts = sortedPosts.length
+const pagination = getPaginationProps(currentPage, totalPosts, POSTS_PER_PAGE, '/')
+const startIndex = (currentPage - 1) * POSTS_PER_PAGE
+const endIndex = startIndex + POSTS_PER_PAGE
+const posts = sortedPosts.slice(startIndex, endIndex)
+
+// Get unique tags for tag cloud
+const uniqueTags = getUniqueTags(allPosts)
+
+// Get featured post (first post)
+const featuredPost = posts[0]
+const regularPosts = posts.slice(1)
+---
+
+<Layout
+    title="My digital blog"
+  description="A place for my thoughts, ideas, guides and reflections."
+>
+  <!-- Hero Section -->
+  <section class="py-16 sm:py-24">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center">
+        <h1 class="text-4xl sm:text-5xl font-light text-sage-900 dark:text-sage-100 mb-6">
+          Welcome to my{''}
+          <span class="text-moss-600 dark:text-moss-400 font-normal">blog</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-sage-600 dark:text-sage-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+        Personal substack I guess :D since I learned how to code and its apparently the cool new thing to make your own minimal blog. Built using astro!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Post -->
+  {featuredPost && (
+    <section class="py-12">
+      <div class="max-w-4xl mx-auto px-6">
+        <h2 class="text-2xl font-light text-sage-800 dark:text-sage-200 mb-8 text-center">
+          Latest thoughts
+        </h2>
+        <div class="max-w-2xl mx-auto">
+          <PostCard post={featuredPost} featured={true} />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Recent Posts -->
+  <section class="py-12 bg-earth-50 dark:bg-sage-900/50">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-light text-sage-800 dark:text-sage-200">
+          Recent posts
+        </h2>
+        <a href="/posts" class="text-moss-600 dark:text-moss-400 hover:text-moss-700 dark:hover:text-moss-300 font-medium text-sm transition-colors">
+          view all →
+        </a>
+      </div>
+
+      {regularPosts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {regularPosts.map((post) => (
+            <PostCard post={post} />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-sage-500 dark:text-sage-400 text-lg">
+            No posts available yet. Check back soon!
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- Tag Cloud -->
+  {uniqueTags.length > 0 && (
+    <section class="py-12">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <h2 class="text-2xl font-light text-sage-800 dark:text-sage-200 mb-8">
+          Explore topics
+        </h2>
+        <div class="flex flex-wrap justify-center gap-3">
+          {uniqueTags.slice(0, 15).map((tag) => (
+            <a
+              href={`/tags/${getSlugFromFilename(tag)}`}
+              class="tag tag-accent hover:scale-105 transition-transform"
+            >
+              {tag}
+            </a>
+          ))}
+          {uniqueTags.length > 15 && (
+            <a
+              href="/tags"
+              class="tag hover:scale-105 transition-transform"
+            >
+              +{uniqueTags.length - 15} more
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Pagination -->
+  {pagination.totalPages > 1 && (
+    <section class="py-8 bg-earth-50 dark:bg-sage-900/50">
+      <div class="max-w-4xl mx-auto px-6">
+        <Pagination {...pagination} />
+      </div>
+    </section>
+  )}
+</Layout>
