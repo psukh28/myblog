@@ -2,6 +2,7 @@
 
 A production-ready Astro v4 blog with MDX and Content Collections. Built for performance, accessibility, and developer experience.
 
+added analytics
 ## ✨ Features
 
 - ⚡ **Lightning Fast** - Built with Astro v4 for optimal performance
