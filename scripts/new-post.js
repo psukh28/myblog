@@ -107,3 +107,4 @@ function createNewPost() {
 }
 
 createNewPost()
+
